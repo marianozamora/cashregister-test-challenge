@@ -1,7 +1,7 @@
 {
   "name": "cash-register-system",
   "version": "1.0.0",
-  "description": "Professional cash register system with extensible architecture for calculating change",
+  "description": "Professional cash register system that calculates optimal change using TypeScript. Features REST API, CSV processing, Swagger docs, and Vercel deployment.",
   "main": "dist/src/index.js",
   "scripts": {
     "check-node": "node -e \"const v=process.version.match(/^v(\\d+)/)[1]; if(v<22) throw new Error('Node.js 22 or higher required, found v'+v)\"",
@@ -22,10 +22,25 @@
     "cash-register",
     "change-calculator",
     "typescript",
-    "architecture",
-    "strategy-pattern"
+    "express",
+    "api",
+    "csv",
+    "swagger",
+    "vercel",
+    "nodejs",
+    "strategy-pattern",
+    "greedy-algorithm",
+    "clean-architecture"
   ],
-  "author": "Cash Register System",
+  "author": "Professional Development Team",
+  "homepage": "https://github.com/username/cash-register-system#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/username/cash-register-system.git"
+  },
+  "bugs": {
+    "url": "https://github.com/username/cash-register-system/issues"
+  },
   "license": "MIT",
   "devDependencies": {
     "@types/compression": "^1.8.1",
