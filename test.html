@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cash Register Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+      }
+      button {
+        padding: 10px 20px;
+        margin: 10px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      .result {
+        margin: 20px 0;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 4px;
+      }
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+      }
+      .success {
+        background: #d4edda;
+        color: #155724;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Cash Register API Test</h1>
+
+      <button onclick="testAPI()">Test API Connection</button>
+      <button onclick="testHealth()">Test Health Endpoint</button>
+      <button onclick="testCalculate()">Test Calculate Change</button>
+
+      <div id="result" class="result" style="display: none"></div>
+    </div>
+
+    <script>
+      async function testAPI() {
+        try {
+          const response = await fetch('/api/');
+          const data = await response.json();
+          showResult('API Test', data, true);
+        } catch (error) {
+          showResult('API Test', { error: error.message }, false);
+        }
+      }
+
+      async function testHealth() {
+        try {
+          const response = await fetch('/api/health');
+          const data = await response.json();
+          showResult('Health Test', data, true);
+        } catch (error) {
+          showResult('Health Test', { error: error.message }, false);
+        }
+      }
+
+      async function testCalculate() {
+        try {
+          const response = await fetch('/api/v1/change/calculate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              amountOwed: 10.0,
+              amountPaid: 20.0,
+              currencyCode: 'USD',
+            }),
+          });
+          const data = await response.json();
+          showResult('Calculate Test', data, true);
+        } catch (error) {
+          showResult('Calculate Test', { error: error.message }, false);
+        }
+      }
+
+      function showResult(title, data, success) {
+        const resultDiv = document.getElementById('result');
+        resultDiv.style.display = 'block';
+        resultDiv.className = 'result ' + (success ? 'success' : 'error');
+        resultDiv.innerHTML = `
+                <h3>${title}</h3>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+      }
+    </script>
+  </body>
+</html>

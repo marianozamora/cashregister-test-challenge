@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cash Register CSV Processor</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 30px; }
+        h1 { color: #2c3e50; margin-bottom: 30px; text-align: center; }
+        .upload-section { border: 2px dashed #3498db; border-radius: 8px; padding: 40px; text-align: center; margin-bottom: 20px; }
+        .upload-btn { background: #3498db; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: 600; margin: 10px; }
+        .upload-btn:hover { background: #2980b9; }
+        .process-btn { background: #27ae60; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 16px; margin: 10px; }
+        .process-btn:hover { background: #219a52; }
+        .currency-select { margin: 20px 0; }
+        select { padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px; }
+        .results { margin-top: 30px; }
+        .loading { display: none; text-align: center; margin: 20px 0; color: #666; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 6px; padding: 15px; margin: 10px 0; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 6px; padding: 15px; margin: 10px 0; }
+        .summary { background: #e8f5e8; border: 1px solid #c3e6c3; border-radius: 6px; padding: 20px; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background: #f8f9fa; font-weight: 600; }
+        tr:nth-child(even) { background: #f8f9fa; }
+        .file-info { background: #f8f9fa; border-radius: 6px; padding: 15px; margin: 15px 0; display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💰 Cash Register CSV Processor</h1>
+        
+        <div class="upload-section">
+            <p style="font-size: 18px; margin-bottom: 15px;">📄 Upload your CSV file</p>
+            <input type="file" id="fileInput" accept=".csv" style="display: none;" />
+            <button class="upload-btn" id="uploadBtn">Choose CSV File</button>
+            <p style="margin-top: 10px; color: #666; font-size: 14px;">CSV format: amount_owed,amount_paid (no headers)</p>
+            <p style="margin-top: 5px; font-size: 12px;">
+                <a href="/examples/sample-transactions.csv" download="sample-transactions.csv" style="color: #3498db; text-decoration: none;">
+                    📥 Download sample CSV file
+                </a>
+            </p>
+        </div>
+
+        <div id="fileInfo" class="file-info">
+            <p><strong>File:</strong> <span id="fileName"></span></p>
+            <p><strong>Size:</strong> <span id="fileSize"></span></p>
+            <button class="process-btn" id="processBtn">Process CSV</button>
+        </div>
+
+        <div class="currency-select">
+            <label for="currency">Currency:</label>
+            <select id="currency">
+                <option value="USD">USD - US Dollar</option>
+                <option value="EUR">EUR - Euro</option>
+            </select>
+        </div>
+
+        <div class="loading" id="loading">⏳ Processing your CSV file...</div>
+        <div id="results" class="results"></div>
+    </div>
+
+    <script>
+        let selectedFile = null;
+
+        // Wait for DOM to load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, setting up event listeners');
+            
+            // Upload button click event
+            document.getElementById('uploadBtn').addEventListener('click', function() {
+                console.log('Upload button clicked');
+                document.getElementById('fileInput').click();
+            });
+
+            // Process button click event
+            document.getElementById('processBtn').addEventListener('click', function() {
+                console.log('Process button clicked');
+                processFile();
+            });
+
+            // File input change event
+            document.getElementById('fileInput').addEventListener('change', function(e) {
+                console.log('File input changed');
+                if (e.target.files.length > 0) {
+                    handleFileSelect(e.target.files[0]);
+                }
+            });
+        });
+
+        function handleFileSelect(file) {
+            console.log('Processing file:', file.name);
+            
+            if (!file.name.endsWith('.csv')) {
+                showError('Please select a valid CSV file');
+                return;
+            }
+            
+            selectedFile = file;
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = formatFileSize(file.size);
+            document.getElementById('fileInfo').style.display = 'block';
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function processFile() {
+            console.log('Processing file:', selectedFile);
+            
+            if (!selectedFile) {
+                showError('Please select a file first');
+                return;
+            }
+
+            const loadingDiv = document.getElementById('loading');
+            const resultsDiv = document.getElementById('results');
+            
+            loadingDiv.style.display = 'block';
+            resultsDiv.innerHTML = '';
+
+            try {
+                const text = await selectedFile.text();
+                console.log('File content:', text);
+                
+                const lines = text.trim().split('\n').filter(line => line.trim());
+                console.log('Lines:', lines);
+                
+                const transactions = lines.map(line => {
+                    const [amountOwed, amountPaid] = line.split(',').map(s => parseFloat(s.trim()));
+                    return { amountOwed, amountPaid };
+                }).filter(t => !isNaN(t.amountOwed) && !isNaN(t.amountPaid));
+
+                console.log('Transactions:', transactions);
+
+                if (transactions.length === 0) {
+                    throw new Error('No valid transactions found in CSV file');
+                }
+
+                const currency = document.getElementById('currency').value;
+                const requestData = {
+                    transactions,
+                    currency
+                };
+
+                console.log('Sending request:', requestData);
+
+                const response = await fetch('/api/v1/change/batch', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestData)
+                });
+
+                console.log('Response status:', response.status);
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Processing failed');
+                }
+
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                displayResults(data);
+                showSuccess(`Successfully processed ${data.summary.totalTransactions} transactions`);
+            } catch (error) {
+                console.error('Error:', error);
+                showError(`Error: ${error.message}`);
+            } finally {
+                loadingDiv.style.display = 'none';
+            }
+        }
+
+        function displayResults(data) {
+            const { results, summary } = data;
+            const resultsDiv = document.getElementById('results');
+            
+            resultsDiv.innerHTML = `
+                <div class="summary">
+                    <h3>📊 Summary</h3>
+                    <p><strong>Total Transactions:</strong> ${summary.totalTransactions}</p>
+                    <p><strong>Total Change:</strong> ${(summary.totalChangeInCents / 100).toFixed(2)} ${summary.currency}</p>
+                    <p><strong>Currency:</strong> ${summary.currency}</p>
+                </div>
+                
+                <h3>💰 Change Calculations</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Transaction #</th>
+                            <th>Change Amount</th>
+                            <th>Denominations</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${results.map((result, index) => `
+                            <tr>
+                                <td>${index + 1}</td>
+                                <td>${(result.totalChangeInCents / 100).toFixed(2)} ${summary.currency}</td>
+                                <td>${result.formattedOutput || 'No change'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function showError(message) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `<div class="error">${message}</div>`;
+        }
+
+        function showSuccess(message) {
+            const resultsDiv = document.getElementById('results');
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success';
+            successDiv.textContent = message;
+            resultsDiv.insertBefore(successDiv, resultsDiv.firstChild);
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+    </script>
+</body>
+</html>
