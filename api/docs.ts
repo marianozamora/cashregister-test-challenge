@@ -19,7 +19,7 @@ export default function handler(req: VercelRequest, res: VercelResponse): void {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   // Serve JSON spec for /api/docs.json or when explicitly requested
-  if (url?.includes('.json') || req.query.format === 'json') {
+  if (url?.includes('.json') || req.query['format'] === 'json') {
     res.setHeader('Content-Type', 'application/json');
     res.status(200).json(swaggerSpec);
     return;
