@@ -3,7 +3,7 @@ import { swaggerSpec } from '../src/config/swagger';
 
 export default function handler(req: VercelRequest, res: VercelResponse): void {
   const { url } = req;
-  
+
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
