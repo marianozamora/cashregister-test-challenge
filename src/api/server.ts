@@ -48,11 +48,15 @@ export class CashRegisterServer {
     }
 
     // Swagger documentation routes
-    this.app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-      explorer: true,
-      customSiteTitle: 'Cash Register API Documentation',
-    }));
-    
+    this.app.use(
+      '/api-docs',
+      swaggerUi.serve,
+      swaggerUi.setup(swaggerSpec, {
+        explorer: true,
+        customSiteTitle: 'Cash Register API Documentation',
+      })
+    );
+
     // API spec JSON endpoint
     this.app.get('/api-docs.json', (req, res) => {
       res.setHeader('Content-Type', 'application/json');
@@ -66,17 +70,19 @@ export class CashRegisterServer {
       // In Vercel, the /api prefix is handled by the routing, so we handle paths directly
       this.app.use('/v1/change', ChangeCalculatorController.getRouter());
       // Root route for API
-      this.app.get('/', (req, res) => res.json({ 
-        message: 'Cash Register API', 
-        version: '1.0.0',
-        timestamp: new Date().toISOString(),
-        endpoints: {
-          health: '/api/health',
-          change: '/api/v1/change/calculate',
-          batch: '/api/v1/change/batch',
-          docs: '/api-docs'
-        }
-      }));
+      this.app.get('/', (req, res) =>
+        res.json({
+          message: 'Cash Register API',
+          version: '1.0.0',
+          timestamp: new Date().toISOString(),
+          endpoints: {
+            health: '/api/health',
+            change: '/api/v1/change/calculate',
+            batch: '/api/v1/change/batch',
+            docs: '/api-docs',
+          },
+        })
+      );
       // Handle any unmatched API routes
       this.app.get('*', (req, res) => {
         console.log(`Vercel API route not found: ${req.path}`);
@@ -85,17 +91,19 @@ export class CashRegisterServer {
     } else {
       // Local development routes
       this.app.use('/api/v1/change', ChangeCalculatorController.getRouter());
-      this.app.get('/api', (req, res) => res.json({ 
-        message: 'Cash Register API', 
-        version: '1.0.0',
-        timestamp: new Date().toISOString(),
-        endpoints: {
-          health: '/api/health',
-          change: '/api/v1/change/calculate',
-          batch: '/api/v1/change/batch',
-          docs: '/api-docs'
-        }
-      }));
+      this.app.get('/api', (req, res) =>
+        res.json({
+          message: 'Cash Register API',
+          version: '1.0.0',
+          timestamp: new Date().toISOString(),
+          endpoints: {
+            health: '/api/health',
+            change: '/api/v1/change/calculate',
+            batch: '/api/v1/change/batch',
+            docs: '/api-docs',
+          },
+        })
+      );
     }
   }
   private setupErrorHandling(): void {
